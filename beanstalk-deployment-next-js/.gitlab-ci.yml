@@ -1,0 +1,48 @@
+stages:
+  - build
+  - deploy
+
+Build:
+  image: node:alpine
+  stage: build
+  script:
+    - echo $VERSION
+    - npm install
+    - npm run build
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .next/cache/
+  artifacts:
+    paths:
+      - .next
+
+.deploy: &deploy
+  image: python
+  stage: deploy
+  before_script:
+    - pip install --upgrade awscli awsebcli
+  script:
+    - eb deploy $BEANSTALK_ENVIRONMENT
+    - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+  only:
+    - tags
+
+Deploy Production:
+  <<: *deploy
+  stage: deploy
+  variables:
+    BEANSTALK_ENVIRONMENT: <name of your beanstalk environment for production>
+    CLOUDFRONT_DISTRIBUTION_ID: <id of your cloudfront distribution for production>
+  only:
+    - tags
+
+Deploy Staging:
+  <<: *deploy
+  stage: deploy
+  variables:
+    BEANSTALK_ENVIRONMENT: <name of your beanstalk environment for production>
+    CLOUDFRONT_DISTRIBUTION_ID: <id of your cloudfront distribution for staging> 
+  only:
+    - master
