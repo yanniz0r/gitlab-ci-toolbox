@@ -1,0 +1,69 @@
+stages:
+  - build
+  - deploy
+
+cache:
+  paths:
+    - node_modules/
+
+.build: &build
+  image: node:alpine
+  stage: build
+  script:
+    - echo VUE_APP_COMMIT_HASH=CI_COMMIT_REF_SLUG >> .env
+    - cat .env
+    - npm install
+    - npm run build
+    - mv dist dist-$ENVIRONMENT
+  artifacts:
+    paths:
+      - dist-$ENVIRONMENT/
+
+Build Staging:
+  variables:
+    ENVIRONMENT: staging
+  <<: *build
+  only:
+    - master
+    - development
+
+Build Production:
+  variables:
+    ENVIRONMENT: production
+  <<: *build
+  only:
+    - master
+
+.deploy: &deploy
+  stage: deploy
+  image: python:alpine
+  before_script:
+    - pip install awscli
+  script:
+    - aws s3 sync --delete dist-$ENVIRONMENT $BUCKET
+    - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+
+Deploy Production:
+  environment:
+    name: Production
+    url: <your production url>
+  variables:
+    NODE_ENV: production
+    ENVIRONMENT: production
+    BUCKET: s3://<your production bucket identifier>
+    CLOUDFRONT_DISTRIBUTION_ID: <your cloudfront distribution id for production>
+  <<: *deploy
+  only:
+    - tags
+
+Deploy Staging:
+  environment:
+    name: Staging
+    url: <your staging url>
+  variables:
+    ENVIRONMENT: staging
+    BUCKET: s3://<your staging bucket identifier>
+    CLOUDFRONT_DISTRIBUTION_ID: <your cloudfront distribution id for production>
+  <<: *deploy
+  only:
+    - master
