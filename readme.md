@@ -4,7 +4,7 @@ This repository contains a selection of reocurring solutions I've built with git
 
 ## How does this work?
 
-Within this repository you'll find folders containing solutions for different use cases. The all should contain a `readme.md` and a `gitlab-ci.yml` which you can directly use in your project.
+Within this repository you'll find folders containing solutions for different usecases. The all should contain a `readme.md` and a `gitlab-ci.yml` which you can directly use in your project.
 
 However, some of those files need a little configuration to work with your usecase. You can find help in each corresponding readme.
 
