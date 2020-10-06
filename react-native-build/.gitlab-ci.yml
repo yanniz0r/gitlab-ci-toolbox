@@ -1,0 +1,16 @@
+Build Android:
+  image: reactnativecommunity/react-native-android
+  stage: build
+  before_script:
+    - base64 -d $ANDROID_KEYSTORE > android/app/app.keystore
+    - echo APP_RELEASE_STORE_FILE=app.keystore >> android/gradle.properties
+    - echo APP_RELEASE_STORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD >> android/gradle.properties
+    - echo APP_RELEASE_KEY_ALIAS=$ANDROID_KEYSTORE_ALIAS  >> android/gradle.properties
+    - echo APP_RELEASE_KEY_PASSWORD=$ANDROID_KEYSTORE_KEY_PASSWORD  >> android/gradle.properties
+  script:
+    - yarn
+    - cd android && chmod +x gradlew
+    - ./gradlew assembleRelease
+  artifacts:
+    paths:
+    - android/app/build/outputs/
